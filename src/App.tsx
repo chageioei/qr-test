@@ -104,7 +104,7 @@ function App() {
                 <div className="mt-4 w-4/5 flex flex-row justify-center">
                     <div className="">履歴</div>
                     <button
-                        className="fixed right-4 -mt-2 p-0 pl-2 pr-2 border-2 border-neutral-400"
+                        className="fixed right-4 -mt-2 p-0 pl-2 pr-2 border-2 border-neutral-400 bg-red-50 text-black"
                         onClick={clickHandler}
                     >
                         削除
