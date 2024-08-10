@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import jsQR from "jsqr";
 import type { Point } from "jsqr/dist/locator";
 import { VIDEO_SIZE } from "../constants";
@@ -16,14 +16,21 @@ const CAMERA_SETTINGS: MediaStreamConstraints = {
 type QRCodeScannerProps = {
     width: number;
     height: number;
+    disabled: boolean;
     callback: (data: string) => void;
 };
 
-const QRCodeScanner = ({ width, height, callback }: QRCodeScannerProps) => {
+const QRCodeScanner = ({ width, height, disabled, callback }: QRCodeScannerProps) => {
     const [isLoading, setLoading] = useState<boolean>(true);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const isDestroyed = useRef<boolean>(false);
+
+    // tick関数内で取得できるようにuseRefで入れ替え
+    const disabledRed = useRef<boolean>(disabled)
+    useEffect(() => {
+        disabledRed.current = disabled;
+    }, [disabled]);
 
     useEffect(() => {
         let stream: MediaStream | null = null;
@@ -90,35 +97,38 @@ const QRCodeScanner = ({ width, height, callback }: QRCodeScannerProps) => {
                 canvas.width,
                 canvas.height
             );
-            // QRコード判定
-            const code = jsQR(
-                imageData.data,
-                imageData.width,
-                imageData.height,
-                {
-                    inversionAttempts: "dontInvert",
+            // 有効な時だけQR判定
+            if (!disabledRed.current) {
+                // QRコード判定
+                const code = jsQR(
+                    imageData.data,
+                    imageData.width,
+                    imageData.height,
+                    {
+                        inversionAttempts: "dontInvert",
+                    }
+                );
+                if (code) {
+                    // QRコードを検出したら枠線描画
+                    drawLine(
+                        code.location.topLeftCorner,
+                        code.location.topRightCorner
+                    );
+                    drawLine(
+                        code.location.topRightCorner,
+                        code.location.bottomRightCorner
+                    );
+                    drawLine(
+                        code.location.bottomRightCorner,
+                        code.location.bottomLeftCorner
+                    );
+                    drawLine(
+                        code.location.bottomLeftCorner,
+                        code.location.topLeftCorner
+                    );
+                    // callback
+                    callback(code.data);
                 }
-            );
-            if (code) {
-                // QRコードを検出したら枠線描画
-                drawLine(
-                    code.location.topLeftCorner,
-                    code.location.topRightCorner
-                );
-                drawLine(
-                    code.location.topRightCorner,
-                    code.location.bottomRightCorner
-                );
-                drawLine(
-                    code.location.bottomRightCorner,
-                    code.location.bottomLeftCorner
-                );
-                drawLine(
-                    code.location.bottomLeftCorner,
-                    code.location.topLeftCorner
-                );
-                // callback
-                callback(code.data);
             }
         }
         requestAnimationFrame(tick);

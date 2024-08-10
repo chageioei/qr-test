@@ -1,16 +1,19 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import QRCodeScanner from "./components/QRCodeScanner";
 import { VIDEO_SIZE } from "./constants";
 import CodeList from "./components/CodeList";
+import LargeButton from "./components/LargeButton";
 
 function App() {
     const lastCode = useRef<string>("");
     const [detectCode, setDetectCode] = useState<string>("");
     const [savingMode, setSavingMode] = useState<boolean>(false);
+    const [isScanning, setScanning] = useState<boolean>(false);
     const divRef = useRef<HTMLDivElement>(null);
     const [codeHistory, setCodeHistory] = useState<string[]>([]);
     const timerId = useRef<number | null>(null);
+    const codeHistoryRef = useRef<string[]>(codeHistory)
 
     // 画面のアスペクト比を保持したプレビューのサイズを計算
     let previewWidth = Math.round(window.innerWidth * 0.6);
@@ -24,6 +27,10 @@ function App() {
             (VIDEO_SIZE.height / VIDEO_SIZE.width) * previewHeight
         );
     }
+
+    useEffect(() => {
+        codeHistoryRef.current = codeHistory
+    }, [codeHistory])
 
     // バーコード検出時のコールバック関数
     const detectionCode = (data: string) => {
@@ -39,8 +46,12 @@ function App() {
 
         lastCode.current = data;
         setDetectCode(data);
-        setCodeHistory((prev) => [data, ...prev]);
-        divRef.current?.scrollTo(0, 0);
+        // setCodeHistory((prev) => [data, ...prev]);
+        if (!codeHistoryRef.current.includes(data)) {
+            setScanning(false)
+            setCodeHistory((prev) => [data, ...prev]);
+            divRef.current?.scrollTo(0, 0);
+        }
     };
 
     const startTimer = () => {
@@ -61,6 +72,13 @@ function App() {
         setCodeHistory([]);
     };
 
+    const changeSavingMode = () => {
+        if (!savingMode && isScanning) {
+            setScanning(false)
+        }
+        setSavingMode(!savingMode)
+    }
+
     return (
         <>
             <div className="flex flex-col items-center p-2 pt-4 h-svh">
@@ -77,6 +95,7 @@ function App() {
                         <QRCodeScanner
                             width={previewWidth}
                             height={previewHeight}
+                            disabled={!isScanning}
                             callback={detectionCode}
                         />
                     )}
@@ -89,7 +108,7 @@ function App() {
                             type="checkbox"
                             role="switch"
                             checked={savingMode}
-                            onChange={() => setSavingMode(!savingMode)}
+                            onChange={changeSavingMode}
                         />
                     </label>
                 </div>
@@ -101,6 +120,7 @@ function App() {
                 >
                     {detectCode}
                 </div>
+                <LargeButton label={isScanning ? "スキャン中…" : "スキャン"} onClick={() => setScanning(!isScanning)} />
                 <div className="mt-4 w-4/5 flex flex-row justify-center">
                     <div className="">履歴</div>
                     <button
