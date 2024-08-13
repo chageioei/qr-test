@@ -5,6 +5,7 @@ import { VIDEO_SIZE } from "./constants";
 import CodeList from "./components/CodeList";
 import LargeButton from "./components/LargeButton";
 import AlertModal from "./components/AlertModal";
+import Title from "./components/Title";
 
 function App() {
     const [savingMode, setSavingMode] = useState<boolean>(false);
@@ -81,8 +82,9 @@ function App() {
 
     return (
         <>
-            <div className="flex flex-col items-center p-2 pt-4 h-svh">
-                <div>
+            <div className="flex flex-col items-center h-svh">
+                <Title title="荷積登録" />
+                <div className="mt-3">
                     {savingMode ? (
                         <div
                             className="bg-neutral-300"
@@ -102,7 +104,7 @@ function App() {
                         />
                     )}
                 </div>
-                <div className="flex flex-row mt-5 justify-end w-full mr-5">
+                <div className="flex flex-row mt-1 justify-end w-full mr-5">
                     <label className="text-neutral-500">
                         カメラオフ
                         <input
@@ -114,11 +116,20 @@ function App() {
                         />
                     </label>
                 </div>
-                <LargeButton
-                    label={isScanning ? "スキャン中…" : "スキャン"}
-                    onClick={scanHandler}
-                    disabled={savingMode}
-                />
+                <div className="mt-3">
+                    <LargeButton
+                        label={isScanning ? "スキャン中…" : "スキャン"}
+                        onClick={scanHandler}
+                        disabled={savingMode}
+                        color={isScanning ? "crimson" : "blue"}
+                    />
+                </div>
+                <div className="mt-2">
+                    <LargeButton
+                        label="完了"
+                        disabled={true}
+                    />
+                </div>
                 <div className="mt-4 w-4/5 flex flex-row justify-center">
                     <div className="">履歴</div>
                     <button
@@ -129,7 +140,7 @@ function App() {
                     </button>
                 </div>
                 <div
-                    className="w-4/5 flex-1 border-2 border-slate-200 overflow-auto"
+                    className="w-4/5 flex-1 border-2 border-slate-200 overflow-auto mb-2"
                     ref={divRef}
                 >
                     <CodeList codes={codeHistory} />

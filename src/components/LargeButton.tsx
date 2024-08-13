@@ -1,22 +1,22 @@
+import { Button } from "@radix-ui/themes";
+
 type LargeButtonProps = {
-    onClick: () => void;
+    onClick?: () => void;
     label: string;
+    color?: "gray" | "gold" | "bronze" | "brown" | "yellow" | "amber" | "orange" | "tomato" | "red" | "ruby" | "crimson" | "pink" | "plum" | "purple" | "violet" | "iris" | "indigo" | "blue" | "cyan" | "teal" | "jade" | "green" | "grass" | "lime" | "mint" | "sky" | undefined;
     disabled?: boolean;
 };
 
 const LargeButton = ({
     onClick,
     label,
+    color,
     disabled = false,
 }: LargeButtonProps) => {
     return (
-        <button
-            className="w-80 h-12 border-2 border-neutral-400 bg-red-50 text-black active:opacity-60"
-            onClick={onClick}
-            disabled={disabled}
-        >
+        <Button onClick={onClick} disabled={disabled} color={color} radius="large" className="w-36 font-bold">
             {label}
-        </button>
+        </Button >
     );
 };
 
