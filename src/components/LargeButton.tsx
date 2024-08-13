@@ -14,7 +14,7 @@ const LargeButton = ({
     disabled = false,
 }: LargeButtonProps) => {
     return (
-        <Button onClick={onClick} disabled={disabled} color={color} radius="large" className="w-36 font-bold">
+        <Button size="3" onClick={onClick} disabled={disabled} color={color} radius="large" className="w-48 font-bold">
             {label}
         </Button >
     );

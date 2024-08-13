@@ -127,7 +127,7 @@ function App() {
                         color={isScanning ? "crimson" : "blue"}
                     />
                 </div>
-                <div className="mt-2">
+                <div className="mt-4">
                     <LargeButton
                         label="完了"
                         disabled={true}
