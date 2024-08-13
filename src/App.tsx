@@ -6,19 +6,21 @@ import CodeList from "./components/CodeList";
 import LargeButton from "./components/LargeButton";
 import AlertModal from "./components/AlertModal";
 import Title from "./components/Title";
+import type { CodeInfo } from "./types";
 
 function App() {
     const [savingMode, setSavingMode] = useState<boolean>(false);
     const [isScanning, setScanning] = useState<boolean>(false);
     const divRef = useRef<HTMLDivElement>(null);
-    const [codeHistory, setCodeHistory] = useState<string[]>([]);
+    const [codeHistory, setCodeHistory] = useState<CodeInfo[]>([]);
     const timerId = useRef<number | null>(null);
-    const codeHistoryRef = useRef<string[]>(codeHistory);
+    const codeHistoryRef = useRef<CodeInfo[]>(codeHistory);
+    const historyIndex = useRef<number>(0);
     const [cameraResume, setCameraResume] = useState<boolean>(false);
     const [dialogOpen, setDialogOpen] = useState(false);
 
     // 画面のアスペクト比を保持したプレビューのサイズを計算
-    let previewWidth = Math.round(window.innerWidth * 0.6);
+    let previewWidth = Math.round(window.innerWidth * 0.8);
     let previewHeight = Math.round(
         (VIDEO_SIZE.width / VIDEO_SIZE.height) * previewWidth
     );
@@ -37,10 +39,11 @@ function App() {
     // バーコード検出時のコールバック関数
     const detectionCode = (data: string) => {
         setScanning(false);
-        if (codeHistoryRef.current.includes(data)) {
+        if (codeHistoryRef.current.some((element) => element.code === data)) {
             setDialogOpen(true);
         } else {
-            setCodeHistory((prev) => [data, ...prev]);
+            historyIndex.current = historyIndex.current + 1
+            setCodeHistory((prev) => [{ id: historyIndex.current, code: data }, ...prev]);
             divRef.current?.scrollTo(0, 0);
         }
         startTimer();
@@ -62,10 +65,6 @@ function App() {
         }
     };
 
-    const clickHandler = () => {
-        setCodeHistory([]);
-    };
-
     const scanHandler = () => {
         if (!isScanning && timerId.current) {
             stopTimer();
@@ -80,11 +79,15 @@ function App() {
         setSavingMode(!savingMode);
     };
 
+    const deleteHandler = (deleteId: number) => {
+        setCodeHistory((prev) => prev.filter((element) => element.id !== deleteId))
+    }
+
     return (
         <>
             <div className="flex flex-col items-center h-svh">
                 <Title title="荷積登録" />
-                <div className="mt-3">
+                <div className="mt-2">
                     {savingMode ? (
                         <div
                             className="bg-neutral-300"
@@ -130,20 +133,11 @@ function App() {
                         disabled={true}
                     />
                 </div>
-                <div className="mt-4 w-4/5 flex flex-row justify-center">
-                    <div className="">履歴</div>
-                    <button
-                        className="fixed right-4 -mt-2 p-0 pl-2 pr-2 border-2 border-neutral-400 bg-red-50 text-black"
-                        onClick={clickHandler}
-                    >
-                        削除
-                    </button>
-                </div>
                 <div
-                    className="w-4/5 flex-1 border-2 border-slate-200 overflow-auto mb-2"
+                    className="w-4/5 flex-1 border-2 border-slate-200 overflow-auto mt-5 mb-2"
                     ref={divRef}
                 >
-                    <CodeList codes={codeHistory} />
+                    <CodeList codes={codeHistory} onDelete={deleteHandler} />
                 </div>
             </div>
             <AlertModal
