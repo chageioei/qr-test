@@ -1,14 +1,16 @@
 import CodeCard from "./CodeCard";
+import type { CodeInfo } from "../types";
 
 type CodeListProps = {
-    codes: string[];
+    codes: CodeInfo[];
+    onDelete?: (id: number) => void;
 };
 
-const CodeList = ({ codes }: CodeListProps) => {
+const CodeList = ({ codes, onDelete }: CodeListProps) => {
     return (
         <>
-            {codes.map((code, index) => (
-                <CodeCard code={code} key={index} />
+            {codes.map((code) => (
+                <CodeCard code={code} key={code.id} onDelete={onDelete} />
             ))}
         </>
     );

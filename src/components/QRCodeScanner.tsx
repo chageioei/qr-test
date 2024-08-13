@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import type { Point } from "jsqr/dist/locator";
 import { VIDEO_SIZE } from "../constants";
@@ -18,19 +18,37 @@ type QRCodeScannerProps = {
     height: number;
     disabled: boolean;
     callback: (data: string) => void;
+    resume: boolean;
+    resumeCallback: () => void;
 };
 
-const QRCodeScanner = ({ width, height, disabled, callback }: QRCodeScannerProps) => {
+const QRCodeScanner = ({
+    width,
+    height,
+    disabled,
+    callback,
+    resume,
+    resumeCallback,
+}: QRCodeScannerProps) => {
     const [isLoading, setLoading] = useState<boolean>(true);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const isDestroyed = useRef<boolean>(false);
+    const isSuspended = useRef<boolean>(false);
 
     // tick関数内で取得できるようにuseRefで入れ替え
-    const disabledRed = useRef<boolean>(disabled)
+    const disabledRed = useRef<boolean>(disabled);
     useEffect(() => {
         disabledRed.current = disabled;
     }, [disabled]);
+
+    useEffect(() => {
+        if (resume && isSuspended.current) {
+            // 画面再開
+            isSuspended.current = false;
+            resumeCallback();
+        }
+    }, [resume, resumeCallback]);
 
     useEffect(() => {
         let stream: MediaStream | null = null;
@@ -84,7 +102,10 @@ const QRCodeScanner = ({ width, height, disabled, callback }: QRCodeScannerProps
         }
         const context = canvas.getContext("2d")!;
 
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        if (
+            video.readyState === video.HAVE_ENOUGH_DATA &&
+            !isSuspended.current
+        ) {
             canvas.hidden = false;
             setLoading(false);
 
@@ -108,7 +129,7 @@ const QRCodeScanner = ({ width, height, disabled, callback }: QRCodeScannerProps
                         inversionAttempts: "dontInvert",
                     }
                 );
-                if (code) {
+                if (code && code.data) {
                     // QRコードを検出したら枠線描画
                     drawLine(
                         code.location.topLeftCorner,
@@ -128,6 +149,8 @@ const QRCodeScanner = ({ width, height, disabled, callback }: QRCodeScannerProps
                     );
                     // callback
                     callback(code.data);
+                    // QRコードを検出したら画面停止
+                    isSuspended.current = true;
                 }
             }
         }
